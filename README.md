@@ -6,7 +6,7 @@
 
 ## What is this? 🤔
 
-This is a server that lets your LLMs (like Claude) talk directly to your Azure Cosmos DB data! Think of it as a friendly translator that sits between your AI assistant and your database, making sure they can chat securely and efficiently.
+This is a server that lets your LLMs (like Claude , VSCODE ) talk directly to your Azure Cosmos DB data! Think of it as a friendly translator that sits between your AI assistant and your database, making sure they can chat securely and efficiently.
 
 ### Quick Example
 ```text
@@ -32,7 +32,7 @@ Here's all you need to do:
 
 ### Prerequisites
 - Node.js 14 or higher
-- Azure Cosmos DB NOSQL account or Azure Cosmos DB Emulator
+- Azure Cosmos DB NOSQL account or Azure Cosmos DB Emulator with the sample dataset(./dataset/vehciles) inserted
 - Claude Desktop 
 
 ### Set up project
@@ -69,6 +69,27 @@ COSMOSDB_KEY=
    ```
    Azure Cosmos DB Server running on stdio
    ```
+
+### How to run it using VSCODE Insiders
+
+To use the Azure MCP with VS Code Insiders with GitHub Copilot Agent Mode, follow these instructions:
+
+1. Install [VS Code Insiders](https://code.visualstudio.com/insiders/).
+
+1. Install the pre-release versions of the GitHub Copilot and GitHub Copilot Chat extensions in VS Code Insiders.
+
+1. Open a new instance of VS Code Insiders in an empty folder.
+
+1. Copy the `.vscode/mcp.json` from the `azure-cosmos-mcp-server` repo to your new folder.
+
+1. Open GitHub Copilot and switch to Agent mode. You should see Azure Cosmos DB MCP Server in the list of tools.
+
+1. Try a prompt that tells the agent to use the Azure MCP server, such as "List Vehicles"
+
+1. The agent should be able to use the Azure Cosmos DB MCP server to complete your query.
+
+This setup allows you to seamlessly interact with Azure Cosmos DB through the MCP server in VSCODE with Github Copilot as shown below.
+
 
 ### Add your project details to Claude Destkop's config file
 
