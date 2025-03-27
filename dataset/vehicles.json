@@ -1,0 +1,80 @@
+[
+    {
+      "id": "V001",
+      "model": "Camry",
+      "year": 2024,
+      "color": "White",
+      "vin": "JT12345XYZ67890",
+      "status": "In Production",
+      "plant": "Toyota Plant Aichi",
+      "assembly_line": "Line 3",
+      "createdAt": "2025-03-27T08:00:00Z"
+    },
+    {
+      "id": "V002",
+      "model": "Corolla",
+      "year": 2024,
+      "color": "Blue",
+      "vin": "JT67890XYZ12345",
+      "status": "Completed",
+      "plant": "Toyota Plant Kentucky",
+      "assembly_line": "Line 2",
+      "createdAt": "2025-03-26T10:30:00Z"
+    },
+    {
+      "id": "V003",
+      "model": "RAV4",
+      "year": 2025,
+      "color": "Red",
+      "vin": "JT11122ABC33344",
+      "status": "Quality Check",
+      "plant": "Toyota Plant Texas",
+      "assembly_line": "Line 1",
+      "createdAt": "2025-03-25T14:20:00Z"
+    },
+    {
+      "id": "V004",
+      "model": "Highlander",
+      "year": 2025,
+      "color": "Black",
+      "vin": "JT55566DEF77788",
+      "status": "In Production",
+      "plant": "Toyota Plant Aichi",
+      "assembly_line": "Line 4",
+      "createdAt": "2025-03-27T09:15:00Z"
+    },
+    {
+      "id": "V005",
+      "model": "Tacoma",
+      "year": 2024,
+      "color": "Silver",
+      "vin": "JT99900GHI11122",
+      "status": "Awaiting Parts",
+      "plant": "Toyota Plant Mexico",
+      "assembly_line": "Line 2",
+      "createdAt": "2025-03-24T16:45:00Z"
+    },
+    {
+      "id": "V006",
+      "model": "Supra",
+      "year": 2025,
+      "color": "Yellow",
+      "vin": "JT22233JKL44455",
+      "status": "Completed",
+      "plant": "Toyota Plant Japan",
+      "assembly_line": "Line 5",
+      "createdAt": "2025-03-22T12:10:00Z"
+    },
+    {
+      "id": "V007",
+      "model": "Land Cruiser",
+      "year": 2024,
+      "color": "Green",
+      "vin": "JT88877MNO66699",
+      "status": "Shipped",
+      "plant": "Toyota Plant South Africa",
+      "assembly_line": "Line 3",
+      "createdAt": "2025-03-21T18:30:00Z"
+    }
+  ]
+  

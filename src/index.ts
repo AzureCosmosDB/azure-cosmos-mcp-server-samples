@@ -17,7 +17,7 @@ const cosmosClient = new CosmosClient({
   key: process.env.COSMOSDB_KEY!,
 });
 
-const container = cosmosClient.database("todos").container("tasks");
+const container = cosmosClient.database("toyota").container("vehicles");
 
 // Tool definitions
 const UPDATE_ITEM_TOOL: Tool = {
@@ -62,18 +62,28 @@ const GET_ITEM_TOOL: Tool = {
 
 const QUERY_CONTAINER_TOOL: Tool = {
   name: "query_container",
-  description: "Queries a Azure Cosmos DB container using SQL-like syntax",
+  description: "Queries an Azure Cosmos DB container using SQL-like syntax",
   inputSchema: {
     type: "object",
     properties: {
       containerName: { type: "string", description: "Name of the container" },
       query: { type: "string", description: "SQL query string" },
-      parameters: { type: "array", description: "Query parameters" },
+      parameters: { 
+        type: "array", 
+        description: "Query parameters",
+        items: {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "Parameter name" },
+            value: { type: "string", description: "Parameter value" } // Adjust type as needed
+          },
+          required: ["name", "value"]
+        }
+      },
     },
-    required: ["containerName", "query"],
+    required: ["containerName", "query", "parameters"],
   },
 };
-
 
 async function updateItem(params: any) {
   try {
