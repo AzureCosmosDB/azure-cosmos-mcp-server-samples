@@ -37,11 +37,13 @@ Here's all you need to do:
 
 ### Set up project
 
-- Obtain Azure Cosmos DB NOSQL account URI and the KEY from the keys section and create an '.env' file with the below key and replace the values
+Obtain the Azure Cosmos DB NoSQL account URI and KEY from the Keys section, and the Database ID and Container ID from the Data Explorer section, then create a `.env` file with the following keys, replacing the placeholder values with your own:
 
 ```
 COSMOSDB_URI=
-COSMOSDB_KEY= 
+COSMOSDB_KEY=
+COSMOS_DATABASE_ID=
+COSMOS_CONTAINER_ID=
 ```
 
 ### Getting Started
