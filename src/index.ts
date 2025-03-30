@@ -17,7 +17,11 @@ const cosmosClient = new CosmosClient({
   key: process.env.COSMOSDB_KEY!,
 });
 
-const container = cosmosClient.database("toyota").container("vehicles");
+// Get DB and container config from env vars
+const databaseId = process.env.COSMOS_DATABASE_ID!;
+const containerId = process.env.COSMOS_CONTAINER_ID!;
+
+const container = cosmosClient.database(databaseId).container(containerId);
 
 // Tool definitions
 const UPDATE_ITEM_TOOL: Tool = {
