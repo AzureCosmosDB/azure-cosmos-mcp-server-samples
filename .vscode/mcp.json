@@ -1,0 +1,17 @@
+{
+    "servers": {
+        "CosmosDB": {
+            // If the command is not recognized, update to the full path for your Node.js installation
+            "command": "node",
+            // Update to your full path for the Azure Cosmos DB MCP server file
+            "args": [ "C:/Cosmos/azure-cosmos-mcp/dist/index.js" ], 
+            "env": {
+                // Update with your Cosmos DB Account values
+                "COSMOSDB_URI": "https://<Your Cosmos DB Account Name>.documents.azure.com:443/",
+                "COSMOSDB_KEY": "Your Cosmos DB Key",
+                "COSMOS_DATABASE_ID": "Your Database ID",
+                "COSMOS_CONTAINER_ID": "Vehicles"
+            }
+        }
+    }
+}
