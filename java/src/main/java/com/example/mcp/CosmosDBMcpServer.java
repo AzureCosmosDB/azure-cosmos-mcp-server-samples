@@ -2,21 +2,24 @@ package com.example.mcp;
 
 import com.azure.cosmos.*;
 import com.azure.cosmos.models.*;
+import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.server.McpSyncServer;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.logging.Logger;
 
 public class CosmosDBMcpServer {
+    private static final Logger logger = LoggerFactory.getLogger(CosmosDBMcpServer.class);
+
     public static void main(String[] args) {
         ObjectMapper mapper = new ObjectMapper();
         var transport = new StdioServerTransportProvider(mapper);
-        Logger logger = Logger.getLogger(CosmosDBMcpServer.class.getName());
 
         var capabilities = McpSchema.ServerCapabilities.builder()
                 .resources(false, true)
@@ -33,11 +36,25 @@ public class CosmosDBMcpServer {
         String key = System.getenv("COSMOSDB_KEY");
         String databaseId = System.getenv("COSMOS_DATABASE_ID");
 
-        CosmosAsyncClient client = new CosmosClientBuilder()
+        CosmosClientBuilder clientBuilder = new CosmosClientBuilder()
                 .endpoint(endpoint)
-                .key(key)
-                .consistencyLevel(ConsistencyLevel.EVENTUAL)
-                .buildAsyncClient();
+                .consistencyLevel(ConsistencyLevel.EVENTUAL);
+
+        if (key != null && !key.isBlank()) {
+            clientBuilder.key(key);
+            logger.info("Using key-based Cosmos DB authentication.");
+        } else {
+            clientBuilder.credential(new DefaultAzureCredentialBuilder().build());
+            logger.info("Using DefaultAzureCredential for Cosmos DB authentication.");
+        }
+
+        CosmosAsyncClient client = clientBuilder.buildAsyncClient();
+
+        // Shutdown hook to close the client
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutting down Cosmos client...");
+            client.close();
+        }));
 
         var getItemTool = new McpServerFeatures.SyncToolSpecification(
                 new McpSchema.Tool("get_item", "Retrieves an item from a Cosmos DB container by ID",
@@ -50,6 +67,7 @@ public class CosmosDBMcpServer {
                         CosmosItemResponse<Object> response = container.readItem(id, new PartitionKey(id), Object.class).block();
                         return new McpSchema.CallToolResult(response.getItem().toString(), false);
                     } catch (Exception e) {
+                        logger.warn("Error in get_item: {}", e.getMessage());
                         return new McpSchema.CallToolResult("Error: " + e.getMessage(), true);
                     }
                 });
@@ -65,6 +83,7 @@ public class CosmosDBMcpServer {
                         container.upsertItem(item).block();
                         return new McpSchema.CallToolResult("Item upserted", false);
                     } catch (Exception e) {
+                        logger.warn("Error in put_item: {}", e.getMessage());
                         return new McpSchema.CallToolResult("Error: " + e.getMessage(), true);
                     }
                 });
@@ -84,6 +103,7 @@ public class CosmosDBMcpServer {
                         container.replaceItem(current, id, new PartitionKey(id)).block();
                         return new McpSchema.CallToolResult("Item updated", false);
                     } catch (Exception e) {
+                        logger.warn("Error in update_item: {}", e.getMessage());
                         return new McpSchema.CallToolResult("Error: " + e.getMessage(), true);
                     }
                 });
@@ -93,7 +113,7 @@ public class CosmosDBMcpServer {
                         "{\"type\": \"object\", \"properties\": {\"containerName\": {\"type\": \"string\"}, \"query\": {\"type\": \"string\"}}, \"required\": [\"containerName\", \"query\"]}"),
                 (exchange, argsMap) -> {
                     try {
-                        logger.info("Received query_container request with args: " + argsMap);
+                        logger.info("Received query_container request with args: {}", argsMap);
                         String containerName = (String) argsMap.get("containerName");
                         String query = (String) argsMap.get("query");
                         CosmosAsyncContainer container = client.getDatabase(databaseId).getContainer(containerName);
@@ -107,8 +127,7 @@ public class CosmosDBMcpServer {
                         resultBuilder.append("]");
                         return new McpSchema.CallToolResult(resultBuilder.toString(), false);
                     } catch (Exception e) {
-                        // Log the error message to the console
-                        logger.severe("Error during query_container execution: " + e.getMessage());
+                        logger.warn("Error in query_container: {}", e.getMessage());
                         return new McpSchema.CallToolResult("Error: " + e.getMessage(), true);
                     }
                 });
@@ -118,6 +137,6 @@ public class CosmosDBMcpServer {
         server.addTool(updateItemTool);
         server.addTool(queryContainerTool);
 
-        System.out.println("CosmosDB MCP server running...");
+        logger.info("CosmosDB MCP server running...");
     }
 }
