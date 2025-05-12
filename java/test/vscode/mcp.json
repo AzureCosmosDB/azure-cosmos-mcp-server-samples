@@ -1,8 +1,8 @@
 {
-  "mcpServers": {
+  "servers": {
     "cosmosdb": {
       "command": "java",
-      "args": ["-jar", "C:\\cosmos\\mcp\\azure-cosmos-mcp-server\\java\\target\\cosmosdb-mcp-server-1.0-SNAPSHOT.jar"],
+      "args": ["-jar", "C:\\path\\to\\compiled\\jar\\cosmosdb-mcp-server-1.0-SNAPSHOT.jar"],
       "env": {
         "COSMOSDB_URI": "Your Cosmos DB Account URI",
         "COSMOSDB_KEY": "Your Cosmos DB Account Key",

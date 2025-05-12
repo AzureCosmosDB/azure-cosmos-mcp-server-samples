@@ -10,11 +10,13 @@ import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
 
 import java.util.Map;
+import java.util.logging.Logger;
 
 public class CosmosDBMcpServer {
     public static void main(String[] args) {
         ObjectMapper mapper = new ObjectMapper();
         var transport = new StdioServerTransportProvider(mapper);
+        Logger logger = Logger.getLogger(CosmosDBMcpServer.class.getName());
 
         var capabilities = McpSchema.ServerCapabilities.builder()
                 .resources(false, true)
@@ -91,6 +93,7 @@ public class CosmosDBMcpServer {
                         "{\"type\": \"object\", \"properties\": {\"containerName\": {\"type\": \"string\"}, \"query\": {\"type\": \"string\"}}, \"required\": [\"containerName\", \"query\"]}"),
                 (exchange, argsMap) -> {
                     try {
+                        logger.info("Received query_container request with args: " + argsMap);
                         String containerName = (String) argsMap.get("containerName");
                         String query = (String) argsMap.get("query");
                         CosmosAsyncContainer container = client.getDatabase(databaseId).getContainer(containerName);
@@ -104,6 +107,8 @@ public class CosmosDBMcpServer {
                         resultBuilder.append("]");
                         return new McpSchema.CallToolResult(resultBuilder.toString(), false);
                     } catch (Exception e) {
+                        // Log the error message to the console
+                        logger.severe("Error during query_container execution: " + e.getMessage());
                         return new McpSchema.CallToolResult("Error: " + e.getMessage(), true);
                     }
                 });
