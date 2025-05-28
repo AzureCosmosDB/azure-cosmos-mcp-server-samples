@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "CosmosDB Golang MCP": {
+      "type": "stdio",
+      "command": "$(pwd)/mcp_azure_cosmosdb"
+    }
+  }
+}
