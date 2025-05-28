@@ -1,4 +1,8 @@
 
+# MCP Server for Azure Cosmos DB using the JavaScript SDK
+
+This is an implementation of a Model Context Protocol (MCP) server for Azure Cosmos DB using the [Azure Cosmos Javascript SDK](https://learn.microsoft.com/en-us/javascript/api/overview/azure/cosmos-readme?view=azure-node-latest). It exposes a set of tools for interacting with Cosmos DB through an LLM or agent using the MCP standard.
+
 ### Quick Example
 
 ```text
