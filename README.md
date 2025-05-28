@@ -1,3 +1,8 @@
+# Azure Cosmos DB MCP  Server Samples
+
+<div align="center">
+  <img src="./src/img/logo.png" alt="Azure Cosmos DB MCP server logo" width="400"/>
+</div>
 
 ## What is this? 🤔
 
