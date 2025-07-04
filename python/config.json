@@ -1,0 +1,11 @@
+{"mcpServers": {
+  "cosmos": {
+            "command": "path\\to\\python.exe",
+            "args": [
+                "path\\to\\cosmos_server.py"
+            ]
+        }
+
+    }
+    
+}
