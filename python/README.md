@@ -19,6 +19,7 @@ Think of it as giving Claude "hands" to touch and explore your Azure Cosmos DB d
 - [Usage](#usage)
 - [Available Tools](#available-tools)
 - [Troubleshooting](#troubleshooting)
+- [Security Best Practices](#security-best-practices)
 - [Common Issues & Fixes](#common-issues--fixes)
 - [How It Works](#how-it-works)
 - [Contributing](#contributing)
@@ -26,95 +27,120 @@ Think of it as giving Claude "hands" to touch and explore your Azure Cosmos DB d
 ## Prerequisites
 
 Before you begin, ensure you have:
-- ✅ Windows 10/11 (for this guide, though it works on other OS too)
+- ✅ Windows, macOS, or Linux
 - ✅ [Claude Desktop](https://claude.ai/download) installed
 - ✅ Azure Cosmos DB account with:
   - Account URI
   - Access Key
   - Database name
   - Container name
-- ✅ Python 3.8 or higher (optional, as we'll use `uv`)
+- ✅ Python 3.8 or higher
 
 ## Installation
 
-### Step 1: Install UV (Python Package Manager)
+You can install using either `pip` (traditional) or `uv` (modern). Choose the method you're most comfortable with.
 
-UV is a modern, fast Python package manager that makes setup easier than pip.
+### Option 1: Using pip (Traditional Method)
 
-Open PowerShell as Administrator and run:
-```powershell
+1. Clone the repository:
+```bash
+git clone https://github.com/AzureCosmosDB/azure-cosmos-mcp-server-samples.git
+cd azure-cosmos-mcp-server-samples/cosmos-python
+```
+
+2. Create a virtual environment:
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# macOS/Linux
+python -m venv venv
+source venv/bin/activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Install MCP CLI tools:
+```bash
+pip install mcp[cli]
+```
+
+5. Configure Claude Desktop (make sure your virtual environment is activated):
+```bash
+# If the command isn't found, ensure your virtual environment is activated
+mcp install cosmos_server.py
+```
+
+### Option 2: Using uv (Modern Method)
+
+UV is a modern, fast Python package manager that simplifies dependency management.
+
+1. Install UV:
+```bash
+# Windows PowerShell (as Administrator)
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### Step 2: Set Up Your Project
-
-1. Create a new folder for your project:
+2. Clone and setup:
 ```bash
-mkdir cosmos-mcp-server
-cd cosmos-mcp-server
+git clone https://github.com/AzureCosmosDB/azure-cosmos-mcp-server-samples.git
+cd azure-cosmos-mcp-server-samples/cosmos-python
 ```
 
-2. Open the folder in VS Code:
-```bash
-code .
-```
-
-3. Initialize the project with UV:
+3. Initialize and install:
 ```bash
 uv init .
-```
-
-4. Add the MCP package:
-```bash
 uv add "mcp[cli]"
+uv add azure-cosmos
 ```
 
-### Step 3: Create the Server File
-
-Copy the `cosmos_server.py` file from this repository into your project folder.
-
-### Step 4: Configure Claude Desktop
-
-Run this command to set up the MCP server in Claude:
+4. Configure Claude Desktop:
 ```bash
 uv run mcp install cosmos_server.py
 ```
 
-This creates/updates the `claude_desktop_config.json` file.
+### Generating requirements.txt
+
+If you need to generate a fresh `requirements.txt`:
+
+**Using pip:**
+```bash
+pip freeze > requirements.txt
+```
+
+**Using uv:**
+```bash
+uv pip compile pyproject.toml -o requirements.txt
+```
 
 ## Configuration
 
 ### Understanding claude_desktop_config.json
 
-The configuration file tells Claude Desktop how to start your MCP server. It looks like this:
-
-```json
-{
-  "mcpServers": {
-    "cosmos": {
-      "command": "C:\\path\\to\\your\\python.exe",
-      "args": [
-        "C:\\path\\to\\your\\cosmos_server.py",
-        "--uri", "your-cosmos-uri",
-        "--key", "your-cosmos-key",
-        "--db", "your-database-name",
-        "--container", "your-container-name"
-      ]
-    }
-  }
-}
-```
+The configuration file tells Claude Desktop how to start your MCP server. It's located at:
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
 ### Configuration Methods
 
-#### Method 1: Using Command Line Arguments (Recommended for Testing)
+#### Method 1: Using Command Line Arguments
 
 Edit your `claude_desktop_config.json`:
+
+**Windows paths:**
 ```json
 {
   "mcpServers": {
     "cosmos": {
-      "command": "python",
+      "command": "C:\\path\\to\\python.exe",
       "args": [
         "C:\\path\\to\\cosmos_server.py",
         "--uri", "https://your-account.documents.azure.com:443/",
@@ -127,9 +153,27 @@ Edit your `claude_desktop_config.json`:
 }
 ```
 
-#### Method 2: Using Environment Variables (Recommended for Production)
+**Unix/macOS/Linux paths:**
+```json
+{
+  "mcpServers": {
+    "cosmos": {
+      "command": "/usr/bin/python3",
+      "args": [
+        "/home/username/cosmos-mcp/cosmos_server.py",
+        "--uri", "https://your-account.documents.azure.com:443/",
+        "--key", "your-primary-key",
+        "--db", "your-database",
+        "--container", "your-container"
+      ]
+    }
+  }
+}
+```
 
-1. Create a `.env` file in your project (never commit this!):
+#### Method 2: Using Environment Variables (Recommended)
+
+1. Create a `.env` file in your project:
 ```env
 COSMOS_URI=https://your-account.documents.azure.com:443/
 COSMOS_KEY=your-primary-key
@@ -137,12 +181,16 @@ COSMOS_DATABASE=your-database
 COSMOS_CONTAINER=your-container
 ```
 
+**Note:** Environment variables are loaded automatically by the MCP server. You don't need to install `python-dotenv` as the server reads from system environment variables directly.
+
 2. Update `claude_desktop_config.json`:
+
+**Windows:**
 ```json
 {
   "mcpServers": {
     "cosmos": {
-      "command": "python",
+      "command": "C:\\path\\to\\python.exe",
       "args": ["C:\\path\\to\\cosmos_server.py"],
       "env": {
         "COSMOS_URI": "https://your-account.documents.azure.com:443/",
@@ -155,12 +203,70 @@ COSMOS_CONTAINER=your-container
 }
 ```
 
-### Finding Your Configuration File
+**Unix/macOS/Linux:**
+```json
+{
+  "mcpServers": {
+    "cosmos": {
+      "command": "/usr/bin/python3",
+      "args": ["/home/username/cosmos-mcp/cosmos_server.py"],
+      "env": {
+        "COSMOS_URI": "https://your-account.documents.azure.com:443/",
+        "COSMOS_KEY": "your-primary-key",
+        "COSMOS_DATABASE": "your-database",
+        "COSMOS_CONTAINER": "your-container"
+      }
+    }
+  }
+}
+```
 
-The `claude_desktop_config.json` file is located at:
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+## Security Best Practices
+
+###  Production Environments
+
+For production use, we strongly recommend using **Azure Managed Identity** instead of access keys:
+
+#### Using Azure Managed Identity (Recommended)
+
+1. **Enable Managed Identity** on your Azure resource (VM, App Service, etc.)
+
+2. **Grant Cosmos DB access** to the Managed Identity:
+```bash
+# Using Azure CLI
+az cosmosdb sql role assignment create \
+  --account-name "your-cosmos-account" \
+  --resource-group "your-resource-group" \
+  --role-definition-name "Cosmos DB Built-in Data Reader" \
+  --principal-id "your-managed-identity-principal-id" \
+  --scope "/dbs/your-database/colls/your-container"
+```
+
+3. **Update your code** to use DefaultAzureCredential:
+```python
+from azure.identity import DefaultAzureCredential
+from azure.cosmos import CosmosClient
+
+# No keys needed - uses Managed Identity automatically
+credential = DefaultAzureCredential()
+client = CosmosClient(url=COSMOS_URI, credential=credential)
+```
+
+#### Additional Security Recommendations
+
+1. **Key Rotation**: If using access keys, rotate them regularly
+2. **Least Privilege**: Grant minimum required permissions
+3. **Network Security**: Use private endpoints and firewall rules
+4. **Audit Logging**: Enable diagnostic logging in Azure Cosmos DB
+5. **Secret Management**: Use Azure Key Vault for storing sensitive configuration
+
+###  Development Environments
+
+For development:
+- Use `.env` files but **never commit them to version control**
+- Add `.env` to your `.gitignore`
+- Use read-only keys when possible
+- Consider using the Azure Cosmos DB Emulator for local development
 
 ## Usage
 
@@ -207,59 +313,68 @@ Your MCP server provides these tools to Claude:
 
 ## Troubleshooting
 
-###  Common Issues & Fixes
+### Common Issues & Fixes
 
 #### 1. "MCP Server Not Showing in Claude"
 **Solution**: 
-- Completely close Claude Desktop (check Task Manager)
+- Completely close Claude Desktop (check Task Manager/Activity Monitor)
 - Make sure your `claude_desktop_config.json` is valid JSON
 - Restart Claude Desktop
 
-#### 2. "Changes to Tools Not Reflected"
-**Solution**: Always restart Claude Desktop after updating `cosmos_server.py`:
-1. Open Task Manager (Ctrl+Shift+Esc)
-2. Find "Claude" or "Claude Desktop"
-3. Click "End Task"
-4. Start Claude Desktop again
+#### 2. "mcp: command not found"
+**Solution**: 
+- Ensure your virtual environment is activated
+- For pip: `source venv/bin/activate` (Unix) or `venv\Scripts\activate` (Windows)
+- For uv: Commands are run with `uv run` prefix
 
-#### 3. "Connection Failed" Errors
+#### 3. "Changes to Tools Not Reflected"
+**Solution**: Always restart Claude Desktop after updating `cosmos_server.py`:
+- Windows: Task Manager → End Task on Claude
+- macOS: Activity Monitor → Quit Claude
+- Linux: `pkill -f Claude` or use System Monitor
+
+#### 4. "Connection Failed" Errors
 **Check**:
 - ✅ Azure Cosmos URI includes `https://` and port `:443/`
 - ✅ Access key is correct (get from Azure Portal)
 - ✅ Database and container names are exact (case-sensitive!)
 - ✅ Your IP is whitelisted in Azure Cosmos DB firewall settings
 
-#### 4. "Module Not Found" Errors
-**Solution**:
+#### 5. "Module Not Found" Errors
+**For pip users**:
 ```bash
-# Make sure you're in the project directory
-uv add azure-cosmos
-uv sync
+# Ensure virtual environment is activated, then:
+pip install -r requirements.txt
 ```
 
-#### 5. "Invalid JSON" in Config File
-**Common mistakes**:
-- Missing commas between fields
-- Using single quotes instead of double quotes
-- Trailing commas after the last item
-- Backslashes in paths not escaped (use `\\` or `/`)
+**For uv users**:
+```bash
+uv sync
+```
 
 ###  Debug Mode
 
 To see detailed logs:
 
-1. Run Claude Desktop from terminal:
+**Windows:**
 ```bash
-# Windows
 "C:\Program Files\Claude\Claude.exe" --enable-logging
+```
 
-# macOS
+**macOS:**
+```bash
 /Applications/Claude.app/Contents/MacOS/Claude --enable-logging
 ```
 
-2. Check logs in:
+**Linux:**
+```bash
+claude --enable-logging
+```
+
+Check logs in:
 - Windows: `%APPDATA%\Claude\logs\`
 - macOS: `~/Library/Logs/Claude/`
+- Linux: `~/.config/Claude/logs/`
 
 ## How It Works
 
@@ -278,22 +393,7 @@ To see detailed logs:
                                                   └─────────────────┘
 ```
 
-### What Happens When You Chat:
-
-1. **You ask Claude** a question about your database
-2. **Claude recognizes** it needs to use the Cosmos tools
-3. **MCP Protocol** sends the request to your Python server
-4. **Python server** connects to Azure Cosmos DB and runs the operation
-5. **Results flow back** through MCP to Claude
-6. **Claude formats** the response in a human-friendly way
-
 ## Best Practices
-
-###  Security
-- **Never** commit your access keys to Git
-- Use environment variables for sensitive data
-- Consider using Azure Managed Identity when possible
-- Regularly rotate your access keys
 
 ###  Performance
 - Start with small queries when exploring large containers
@@ -320,12 +420,12 @@ We welcome contributions! This is the first Python-based Azure Cosmos DB MCP ser
 
 ### Ideas for Contributions
 
-- 🔍 Add support for more Azure Cosmos DB operations
-- 📊 Implement data visualization tools
-- 🔒 Add authentication options
-- 📝 Improve error messages
-- 🌍 Add support for multiple containers
-- ⚡ Performance optimizations
+-  Add support for more Azure Cosmos DB operations
+-  Implement data visualization tools
+-  Add authentication options
+-  Improve error messages
+-  Add support for multiple containers
+-  Performance optimizations
 
 ## License
 
@@ -340,8 +440,8 @@ MIT License - see LICENSE file for details
 ---
 
 **Need Help?** 
-- 📖 [MCP Documentation](https://docs.mcp.io)
-- 📚 [Azure Cosmos DB Docs](https://docs.microsoft.com/azure/cosmos-db/)
-- 💬 Open an issue in this repository
+-  [MCP Documentation](https://docs.mcp.io)
+-  [Azure Cosmos DB Docs](https://docs.microsoft.com/azure/cosmos-db/)
+-  Open an issue in this repository
 
-**Happy querying! 🎉**
+**Happy querying! **
