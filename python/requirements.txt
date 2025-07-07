@@ -1,0 +1,6 @@
+azure-cosmos
+pandas
+mcp[cli]
+fastmcp
+azure-identity
+python-dotenv
