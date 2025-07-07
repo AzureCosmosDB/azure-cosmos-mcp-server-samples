@@ -19,6 +19,11 @@ from typing import Optional, List, Dict, Any
 
 from azure.cosmos import CosmosClient, exceptions
 from mcp.server.fastmcp import FastMCP
+try:
+    from azure.identity import DefaultAzureCredential
+    AZURE_IDENTITY_AVAILABLE = True
+except ImportError:
+    AZURE_IDENTITY_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(
@@ -37,27 +42,42 @@ __license__ = "MIT"
 class CosmosDBConnection:
     """Manages the connection to Azure Cosmos DB."""
     
-    def __init__(self, uri: str, key: str, database: str, container: str):
+    def __init__(self, uri: str, key: Optional[str], database: str, container: str, use_managed_identity: bool = False):
         """
         Initialize Cosmos DB connection parameters.
         
         Args:
             uri: Cosmos DB account URI
-            key: Cosmos DB account key
+            key: Cosmos DB account key (optional if using Managed Identity)
             database: Database name
             container: Default container name
+            use_managed_identity: Use Azure Managed Identity for authentication
         """
         self.uri = uri
         self.key = key
         self.database = database
         self.default_container = container
+        self.use_managed_identity = use_managed_identity
         self._client = None
         self._database_client = None
     
     def get_client(self) -> CosmosClient:
         """Get or create the Cosmos DB client."""
         if not self._client:
-            self._client = CosmosClient(self.uri, credential=self.key)
+            if self.use_managed_identity:
+                if not AZURE_IDENTITY_AVAILABLE:
+                    raise RuntimeError(
+                        "Azure Managed Identity requested but azure-identity package not installed. "
+                        "Install with: pip install azure-identity"
+                    )
+                credential = DefaultAzureCredential()
+                self._client = CosmosClient(self.uri, credential=credential)
+                logger.info("Connected to Cosmos DB using Azure Managed Identity")
+            else:
+                if not self.key:
+                    raise RuntimeError("Access key required when not using Managed Identity")
+                self._client = CosmosClient(self.uri, credential=self.key)
+                logger.info("Connected to Cosmos DB using access key")
         return self._client
     
     def get_database_client(self):
@@ -156,6 +176,11 @@ Example:
         dest="container",
         default=os.getenv("COSMOS_CONTAINER"),
         help="Container name (can also be set via COSMOS_CONTAINER env var)"
+    )
+    parser.add_argument(
+        "--use-managed-identity",
+        action="store_true",
+        help="Use Azure Managed Identity for authentication instead of access key"
     )
     parser.add_argument(
         "--version",
@@ -552,8 +577,11 @@ def validate_connection_params(args: argparse.Namespace) -> bool:
     
     if not args.uri:
         missing_params.append("URI (--uri or COSMOS_URI)")
-    if not args.key:
-        missing_params.append("Key (--key or COSMOS_KEY)")
+    
+    # Key is not required if using Managed Identity
+    if not args.use_managed_identity and not args.key:
+        missing_params.append("Key (--key or COSMOS_KEY) - or use --use-managed-identity")
+    
     if not args.db:
         missing_params.append("Database (--db or COSMOS_DATABASE)")
     if not args.container:
@@ -583,11 +611,13 @@ def main():
             uri=args.uri,
             key=args.key,
             database=args.db,
-            container=args.container
+            container=args.container,
+            use_managed_identity=args.use_managed_identity
         )
         
         # Test connection
-        logger.info(f"Connecting to Cosmos DB - Database: {args.db}, Container: {args.container}")
+        auth_method = "Managed Identity" if args.use_managed_identity else "Access Key"
+        logger.info(f"Connecting to Cosmos DB using {auth_method} - Database: {args.db}, Container: {args.container}")
         cosmos_connection.get_container_client()
         logger.info("Successfully connected to Cosmos DB")
         
