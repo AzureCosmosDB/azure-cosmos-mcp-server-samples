@@ -1,16 +1,16 @@
 # Azure Cosmos DB MCP Server 
 
-**The first Python-based MCP (Model Context Protocol) server for Azure Cosmos DB** - enabling Claude Desktop to interact directly with your Cosmos DB databases through natural language.
+**The first Python-based MCP (Model Context Protocol) server for Azure Cosmos DB** - enabling Claude Desktop to interact directly with your Azure Cosmos DB databases through natural language.
 
 ## What is this? 
 
 This project allows Claude Desktop (Anthropic's AI assistant) to:
-- Query your Cosmos DB databases using SQL-like syntax
+- Query your Azure Cosmos DB databases using SQL-like syntax
 - Explore data schemas and relationships
 - Analyze your data patterns
 - Help you understand your database structure
 
-Think of it as giving Claude "hands" to touch and explore your Cosmos DB data while you chat with it!
+Think of it as giving Claude "hands" to touch and explore your Azure Cosmos DB data while you chat with it!
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
@@ -224,10 +224,10 @@ Your MCP server provides these tools to Claude:
 
 #### 3. "Connection Failed" Errors
 **Check**:
-- ✅ Cosmos URI includes `https://` and port `:443/`
+- ✅ Azure Cosmos URI includes `https://` and port `:443/`
 - ✅ Access key is correct (get from Azure Portal)
 - ✅ Database and container names are exact (case-sensitive!)
-- ✅ Your IP is whitelisted in Cosmos DB firewall settings
+- ✅ Your IP is whitelisted in Azure Cosmos DB firewall settings
 
 #### 4. "Module Not Found" Errors
 **Solution**:
@@ -267,7 +267,7 @@ To see detailed logs:
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  Claude Desktop │────▶│  MCP Protocol    │────▶│  Cosmos Server  │
+│  Claude Desktop │────▶│  MCP Protocol    │────▶│  Azure Cosmos Server  │
 │   (MCP Client)  │◀────│  (JSON-RPC)      │◀────│  (Python MCP)   │
 └─────────────────┘     └──────────────────┘     └────────┬────────┘
                                                            │
@@ -283,7 +283,7 @@ To see detailed logs:
 1. **You ask Claude** a question about your database
 2. **Claude recognizes** it needs to use the Cosmos tools
 3. **MCP Protocol** sends the request to your Python server
-4. **Python server** connects to Cosmos DB and runs the operation
+4. **Python server** connects to Azure Cosmos DB and runs the operation
 5. **Results flow back** through MCP to Claude
 6. **Claude formats** the response in a human-friendly way
 
@@ -308,7 +308,7 @@ To see detailed logs:
 
 ## Contributing
 
-We welcome contributions! This is the first Python-based Cosmos DB MCP server, and there's room for improvement.
+We welcome contributions! This is the first Python-based Azure Cosmos DB MCP server, and there's room for improvement.
 
 ### How to Contribute
 
@@ -320,7 +320,7 @@ We welcome contributions! This is the first Python-based Cosmos DB MCP server, a
 
 ### Ideas for Contributions
 
-- 🔍 Add support for more Cosmos DB operations
+- 🔍 Add support for more Azure Cosmos DB operations
 - 📊 Implement data visualization tools
 - 🔒 Add authentication options
 - 📝 Improve error messages
