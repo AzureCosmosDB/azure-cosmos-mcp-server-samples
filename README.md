@@ -11,6 +11,7 @@ This repo showcases how to build Model Context Protocol (MCP) servers using Azur
  - [JavaScript MCP Server Sample for Azure Cosmos DB](/javascript)
  - [GoLang MCP Server Sample for Azure Cosmos DB](/golang)
  - [Java MCP Server Sample for Azure Cosmos DB](/java)
+ - [Python MCP Server Sample for Azure Cosmos DB](/python)
 
 
 ## 📦 Official Azure Cosmos DB MCP server 
