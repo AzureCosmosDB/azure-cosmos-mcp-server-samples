@@ -16,9 +16,12 @@ import logging
 import os
 import sys
 from typing import Optional, List, Dict, Any
+from dotenv import load_dotenv
 
 from azure.cosmos import CosmosClient, exceptions
-from mcp.server.fastmcp import FastMCP
+# Load environment variables from .env file
+load_dotenv()
+from fastmcp import FastMCP
 try:
     from azure.identity import DefaultAzureCredential
     AZURE_IDENTITY_AVAILABLE = True
@@ -33,9 +36,9 @@ logging.basicConfig(
 logger = logging.getLogger('cosmos-mcp-server')
 
 # Version information
-__version__ = "0.1.0"
-__author__ = "Mohammed Aftab"
-__email__ = "aftab001x@gmail.com"
+__version__ = "0.2.0"
+__author__ = "Mohammed Ashfaq"
+__email__ = "ash001x@gmail.com"
 __license__ = "MIT"
 
 
@@ -625,16 +628,17 @@ def main():
         logger.error(f"Failed to initialize Cosmos DB connection: {str(e)}")
         sys.exit(1)
     
-    # Start MCP server
+    # MCP streamable-http server 
     try:
         logger.info("Starting Azure Cosmos DB MCP server...")
-        mcp.run()
+        mcp.run(transport="streamable-http", host="127.0.0.1", port=8080)
+
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
     except Exception as e:
         logger.error(f"Server error: {str(e)}")
         sys.exit(1)
 
-
+# Start the server by python cosmos_server.py
 if __name__ == "__main__":
     main()
