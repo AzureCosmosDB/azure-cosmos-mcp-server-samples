@@ -16,7 +16,7 @@ This repo showcases how to build Model Context Protocol (MCP) servers using Azur
 
 ## 📦 Official Azure Cosmos DB MCP server 
 
-The Azure MCP Server enables AI agents and other types of clients to interact with Azure resources through natural language commands. It implements the Model Context Protocol (MCP) to provide these key features of multipl Azure services including Azure Cosmos DB, Please visit the repository for the latest source code, documentation, and installation instructions:
+The Azure MCP Server enables AI agents and other types of clients to interact with Azure resources through natural language commands. It implements the Model Context Protocol (MCP) to provide these key features of multiple Azure services including Azure Cosmos DB, Please visit the repository for the latest source code, documentation, and installation instructions:
 
 👉 **[Azure MCP GitHub Repository](https://github.com/Azure/azure-mcp)**
 
