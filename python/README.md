@@ -1,50 +1,98 @@
-# Azure Cosmos DB MCP Server 
+# Azure Cosmos DB MCP Server + Intelligent Query Assistant
 
-**The first Python-based MCP (Model Context Protocol) server for Azure Cosmos DB** - enabling Claude Desktop and other LLMs to interact directly with your Azure Cosmos DB databases through natural language.
+**A complete Python-based MCP (Model Context Protocol) ecosystem for Azure Cosmos DB** - featuring a streamable HTTP server, an intelligent ReAct agent client, and a beautiful Streamlit UI for natural language querying.
 
-## What is this? 
+## What is this?
 
-This project allows AI assistants (Claude, Continue.dev, etc.) to:
-- Query your Azure Cosmos DB databases using SQL-like syntax
-- Explore data schemas and relationships
-- Analyze your data patterns
-- Help you understand your database structure
+This project provides three powerful components:
 
-Think of it as giving AI "hands" to touch and explore your Azure Cosmos DB data while you chat with it!
+1. **🚀 MCP Server**: Streamable HTTP server exposing Cosmos DB operations via MCP protocol
+2. **🤖 Intelligent Client**: ReAct agent with LangChain for natural language queries
+3. **🎨 Streamlit UI**: Beautiful web interface for non-technical users
 
-## ✨ What's New in v0.2.0
+Think of it as a complete stack for AI-powered database interactions - from protocol to UI!
 
-- 🚀 **Streamable HTTP Transport**: Modern, scalable transport protocol
-- 🔧 **FastMCP 2.3.0**: Upgraded to latest FastMCP version
-- 📦 **Simplified Setup**: No transport configuration needed - just run!
-- 🌐 **Multiple LLM Support**: Works with Claude Desktop, Continue.dev, and more
-- 📋 **Transport Bridge**: Easy Claude Desktop integration via proxy
-- 🔄 **Environment Variables**: Automatic `.env` file loading with python-dotenv
+
+## ✨ What's New in v0.3.0
+
+### MCP Server Enhancements
+- 🌐 **Streamable HTTP Transport**: Modern, scalable HTTP/JSON protocol
+- 📦 **FastMCP 2.3.0**: Latest FastMCP with enhanced stability
+- 🔄 **JSON Responses**: All tools return structured JSON for better parsing
+- 📋 **Enhanced Tools**: Improved count_documents with filter support
+- 🚀 **Configurable Host/Port**: Flexible deployment options
+
+### Intelligent Client
+- 🤖 **ReAct Agent**: LangChain-powered reasoning and action loop
+- 🔍 **Sequential Location Fallback**: Smart field cascade (City → Region → Area)
+- ⚡ **Guardrails**: Safe query wrappers prevent common errors
+- 🎯 **Temporal Intelligence**: Natural date parsing ("last month", "this year")
+- 🛡️ **Latest Guard**: Optional versioning support (c.latest = 0)
+- 📊 **Configurable Settings**: Customize iterations, TOP N, fallback fields
+
+### Streamlit UI
+- 🎨 **Modern Interface**: Clean, responsive web UI
+- 📊 **Multiple Views**: Table, JSON, and column-select modes
+- 📥 **CSV Export**: Download query results
+- 📜 **Query History**: Search, filter, and rerun past queries
+- 🔧 **Agent Steps**: View reasoning process (optional)
+- ⚡ **Quick Actions**: One-click schema, count, and sample queries
+- 🎯 **Live Metrics**: Execution time, step count, result count
+
+## Architecture
+
+```
+┌─────────────────────┐
+│  Streamlit UI       │  Port 8501 (Web Interface)
+│  streamlit_app.py   │  • Natural language input
+└──────────┬──────────┘  • Visual data display
+           │              • Query history
+           ▼              • CSV export
+┌─────────────────────┐
+│  Intelligent Client │  (Python Process)
+│  cosmos_client.py   │  • ReAct Agent
+└──────────┬──────────┘  • LangChain
+           │              • Smart fallbacks
+           │              • Query optimization
+           ▼
+┌─────────────────────┐
+│  MCP Server         │  Port 8000 (HTTP/JSON)
+│  cosmos_mcp_server  │  • Streamable HTTP
+└──────────┬──────────┘  • FastMCP
+           │              • Tool execution
+           ▼
+┌─────────────────────┐
+│  Azure Cosmos DB    │
+│  (Cloud Database)   │
+└─────────────────────┘
+```
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
-- [Transport Configuration](#transport-configuration)
-- [LLM Integration](#llm-integration)
+- [Quick Start](#quick-start)
+- [Component Details](#component-details)
+- [Configuration](#configuration)
+- [Usage Examples](#usage-examples)
 - [Available Tools](#available-tools)
+- [Deployment](#deployment)
 - [Troubleshooting](#troubleshooting)
-- [Security Best Practices](#security-best-practices)
 - [Contributing](#contributing)
 
 ## Prerequisites
 
 Before you begin, ensure you have:
-- ✅ Windows, macOS, or Linux
-- ✅ Python 3.8 or higher
-- ✅ Azure Cosmos DB account with:
+- ✅ **Python 3.8+** (Python 3.10+ recommended)
+- ✅ **Azure Cosmos DB** account with:
   - Account URI
   - Access Key
   - Database name
   - Container name
-- ✅ One of these LLM clients:
-  - [Claude Desktop](https://claude.ai/download)
-  - [Continue.dev](https://continue.dev/)
-  - Any MCP-compatible client
+- ✅ **Azure OpenAI** access (for intelligent client):
+  - Endpoint URL
+  - API Key
+  - Deployment name (e.g., gpt-4o)
+- ✅ **Operating System**: Windows, macOS, or Linux
 
 ## Installation
 
@@ -52,8 +100,8 @@ Before you begin, ensure you have:
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/AzureCosmosDB/azure-cosmos-mcp-server-samples.git
-cd azure-cosmos-mcp-server-samples/python
+git clone https://github.com/yourusername/cosmos-mcp-assistant.git
+cd cosmos-mcp-assistant
 ```
 
 2. **Create virtual environment:**
@@ -70,302 +118,607 @@ source venv/bin/activate
 3. **Install dependencies:**
 ```bash
 pip install -r requirements.txt
-
-# Verify FastMCP version (should be 2.3.0+)
-pip show fastmcp
 ```
 
 4. **Create environment configuration:**
+Create a `.env` file in the project root:
+
+```env
+# Azure Cosmos DB Configuration
+COSMOS_URI=https://your-account.documents.azure.com:443/
+COSMOS_KEY=your-cosmos-primary-key
+COSMOS_DATABASE=your-database-name
+COSMOS_CONTAINER=your-container-name
+
+# Azure OpenAI Configuration
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-openai-api-key
+AZURE_OPENAI_DEPLOYMENT=gpt-4o
+AZURE_OPENAI_API_VERSION=2024-05-01-preview
+
+# MCP Server Configuration
+MCP_HOST=localhost
+MCP_PORT=8000
+MCP_URL=http://localhost:8000/mcp
+```
+
+## Quick Start
+
+### Option 1: Full Stack (Recommended for End Users)
+
+**Terminal 1 - Start MCP Server:**
 ```bash
-# Create .env file
-echo "COSMOS_URI=https://your-account.documents.azure.com:443/" > .env
-echo "COSMOS_KEY=your-primary-key" >> .env
-echo "COSMOS_DATABASE=your-database" >> .env
-echo "COSMOS_CONTAINER=your-container" >> .env
+python cosmos_mcp_server.py
 ```
 
-5. **Start the server:**
+**Terminal 2 - Start Streamlit UI:**
 ```bash
-# Simple start (uses environment variables from .env)
-python cosmos_server.py
+streamlit run streamlit_app.py
 ```
 
-> **Note:** The server will automatically:
-> - Use Streamable HTTP transport on `127.0.0.1:8080` 
-> - Load configuration from `.env` file or environment variables
-> - No additional arguments needed!
+**Access the UI:**
+Open browser to `http://localhost:8501`
 
-Your server will be running at `http://127.0.0.1:8080/mcp/` 🚀
+### Option 2: CLI Client (For Developers)
 
-## Transport Configuration
+**Terminal 1 - Start MCP Server:**
+```bash
+python cosmos_mcp_server.py
+```
 
-### Streamable HTTP (Default)
+**Terminal 2 - Run CLI Client:**
+```bash
+python cosmos_client.py
+```
 
-**Best for**: Production deployments, web-based integrations, Continue.dev, multiple LLM clients
+### Option 3: MCP Server Only (For LLM Integration)
 
 ```bash
-# Default start (recommended for most users)
-python cosmos_server.py
+python cosmos_mcp_server.py --host localhost --port 8000
 ```
 
-> **Note:** The server runs on `127.0.0.1:8080` by default and loads configuration from your `.env` file.
+Connect with any MCP-compatible client at `http://localhost:8000/mcp`
 
-### Host Configuration Guide
+## Component Details
 
-The server runs on `127.0.0.1:8080` by default with Streamable HTTP transport. This provides the best balance of security and functionality for most use cases.
+### 🚀 MCP Server (`cosmos_mcp_server.py`)
 
-## LLM Integration
+**Purpose**: Expose Cosmos DB operations via MCP protocol
 
-### 🎯 Continue.dev (Recommended - Direct HTTP)
+**Features**:
+- ✅ Streamable HTTP transport (JSON-RPC over HTTP)
+- ✅ 10 powerful tools (query, count, schema, etc.)
+- ✅ Cross-partition query support
+- ✅ Optional Managed Identity authentication
+- ✅ Configurable host/port
+- ✅ Health check endpoint
 
-Continue.dev natively supports Streamable HTTP transport, making integration seamless:
-
-**1. Add to your Continue.dev config:**
-
-```yaml
-name: Azure Cosmos DB MCP server
-version: 0.2.0
-schema: v1
-mcpServers:
-  - name: Azure Cosmos DB Explorer
-    type: streamable-http
-    url: http://127.0.0.1:8080/mcp/
-```
-
-**2. Start the server:**
+**Usage**:
 ```bash
-python cosmos_server.py
+# Basic start
+python server.py
+
+# Custom host/port
+python server.py --host 0.0.0.0 --port 8080
+
+# With Managed Identity
+python server.py --use-managed-identity
+
+# With all options
+python server.py \
+  --uri https://account.documents.azure.com:443/ \
+  --key your-key \
+  --db mydb \
+  --container mycontainer \
+  --host localhost \
+  --port 8000
 ```
 
-**3. Use in Continue.dev:**
+**Endpoints**:
+- `http://localhost:8000/mcp` - Main MCP endpoint
+- `http://localhost:8000/health` - Health check (if implemented)
+
+### 🤖 Intelligent Client (`client.py`)
+
+**Purpose**: Natural language query interface with intelligent reasoning
+
+**Key Features**:
+- ✅ **ReAct Agent**: Reasoning and action loop with LangChain
+- ✅ **Smart Fallbacks**: Sequential location field cascade
+- ✅ **Temporal Parsing**: Understands "last month", "this year", etc.
+- ✅ **Query Guardrails**: Automatic SQL fence stripping, latest guard injection
+- ✅ **Configurable**: Max iterations, TOP N, location fields
+
+**Configuration Options**:
+```python
+from client import CosmosClient, Settings
+
+# Customize settings
+cfg = Settings(
+    # Azure OpenAI
+    azure_endpoint="https://resource.openai.azure.com/",
+    azure_api_key="your-key",
+    azure_deployment="gpt-4o",
+    
+    # MCP Connection
+    mcp_url="http://localhost:8000/mcp",
+    
+    # Agent Behavior
+    max_iterations=4,
+    default_top_n=50,
+    enforce_latest_guard=False,  # Set True for versioned data
+    
+    # Location Fallback (priority order)
+    location_fallback_fields=["City", "Region", "Area", "District"]
+)
+
+client = CosmosClient(cfg)
+await client.connect()
 ```
-@Azure Cosmos DB Explorer what containers do I have in my database?
+
+**Usage**:
+```python
+# Simple query
+response = await client.ainvoke("How many documents are in the container?")
+print(response['text'])
+
+# Complex query
+response = await client.ainvoke(
+    "Show me all active properties in Miami from last month"
+)
 ```
 
-### 🔄 Claude Desktop (via Transport Bridge)
+### 🎨 Streamlit UI (`streamlit_app.py`)
 
-Since Claude Desktop uses STDIO, we need a transport bridge to connect to our HTTP server:
+**Purpose**: User-friendly web interface for querying Cosmos DB
 
-**1. Create `proxy.py` (Transport Bridge):**
+**Features**:
+- ✅ **Natural Language Input**: Ask questions in plain English
+- ✅ **Multiple Display Modes**: Table, JSON, column-select
+- ✅ **Query History**: Search, filter, rerun past queries
+- ✅ **CSV Export**: Download results with one click
+- ✅ **Agent Reasoning**: View intermediate steps (optional)
+- ✅ **Quick Actions**: Schema, count, sample with one click
+- ✅ **Live Metrics**: Execution time, steps, result count
+- ✅ **Configurable**: Adjust agent settings in real-time
+
+**UI Sections**:
+1. **Sidebar**: Connection, settings, quick actions
+2. **Query Input**: Text area with example queries
+3. **Results Display**: Tables, JSON, metrics
+4. **Query History**: Searchable past queries
+
+## Configuration
+
+### Environment Variables (`.env`)
+
+```env
+# ============================================================================
+# Azure Cosmos DB Configuration
+# ============================================================================
+COSMOS_URI=https://your-account.documents.azure.com:443/
+COSMOS_KEY=your-primary-key-here
+COSMOS_DATABASE=your-database-name
+COSMOS_CONTAINER=your-default-container
+
+# ============================================================================
+# Azure OpenAI Configuration (for Intelligent Client & Streamlit)
+# ============================================================================
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-api-key-here
+AZURE_OPENAI_DEPLOYMENT=gpt-4o
+AZURE_OPENAI_API_VERSION=2024-05-01-preview
+
+# ============================================================================
+# MCP Server Configuration
+# ============================================================================
+MCP_HOST=localhost
+MCP_PORT=8000
+MCP_URL=http://localhost:8000/mcp
+```
+
+### Streamlit Secrets (`.streamlit/secrets.toml`)
+
+```toml
+# For production Streamlit deployments
+AZURE_OPENAI_ENDPOINT = "https://your-resource.openai.azure.com/"
+AZURE_OPENAI_API_KEY = "your-api-key-here"
+AZURE_OPENAI_DEPLOYMENT = "gpt-4o"
+MCP_URL = "http://localhost:8000/mcp"
+```
+
+### Agent Configuration (Python)
 
 ```python
-# proxy.py - Transport Bridging for Claude Desktop
-# Link: https://gofastmcp.com/servers/proxy#transport-bridging
-
-from fastmcp import FastMCP
-
-mcp = FastMCP.as_proxy("http://127.0.0.1:8080/mcp/", name="Azure Cosmos DB Explorer")
-
-if __name__ == "__main__":
-    mcp.run()
+# Customize in cosmos_client.py or programmatically
+cfg = Settings(
+    # Agent Controls
+    max_iterations=4,           # Max reasoning steps
+    agent_timeout=60,           # Overall timeout (seconds)
+    tool_timeout=45,            # Per-tool timeout
+    
+    # Query Behavior
+    default_top_n=50,           # Default LIMIT for queries
+    enforce_latest_guard=False, # Add c.latest = 0 filter
+    enable_sql_count_fallback=True,  # Fallback to SQL COUNT
+    
+    # Location Fallback (try in order)
+    location_fallback_fields=["City", "Region", "Area"],
+    
+    # Connection
+    connect_timeout=10,
+    mcp_url="http://localhost:8000/mcp"
+)
 ```
 
-**2. Claude Desktop Configuration:**
+## Usage Examples
 
-Add to `claude_desktop_config.json`:
+### Natural Language Queries
 
-```json
-{
-  "mcpServers": {
-    "cosmos": {
-      "command": "python",
-      "args": [
-        "path/to/proxy.py"
-      ],
-      "env": {},
-      "transport": "stdio"
-    }
-  }
-}
+**Schema Exploration:**
+```
+"Describe the container schema"
+"What fields are available?"
+"Show me the partition key"
 ```
 
-**3. Start both servers:**
-
-```bash
-# Terminal 1: Start the main MCP server
-python cosmos_server.py
-
-# Terminal 2: Claude Desktop will automatically start the proxy
-# Just restart Claude Desktop
+**Counting:**
+```
+"How many documents are in the container?"
+"Count documents where Status = 'Active'"
+"How many records from last month?"
 ```
 
-### 🔧 Alternative: UV Package Manager
-
-If you prefer using `uv`:
-
-```json
-{
-  "mcpServers": {
-    "cosmos": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--with",
-        "fastmcp",
-        "fastmcp",
-        "run",
-        "path/to/proxy.py"
-      ],
-      "env": {},
-      "transport": "stdio"
-    }
-  }
-}
+**Data Retrieval:**
+```
+"Show me 10 sample documents"
+"Find all records where City is Miami"
+"List top 20 items ordered by price descending"
 ```
 
-### 🎨 Other LLM Clients
+**Filtering:**
+```
+"Show active properties in Miami"
+"Find documents with Price > 500000"
+"Get all records from last year"
+```
 
-Any MCP-compatible client can connect to the HTTP endpoint:
+**Distinct Values:**
+```
+"List all distinct cities"
+"What are the unique status values?"
+"Show me all product categories"
+```
 
-**Endpoint**: `http://127.0.0.1:8080/mcp/`  
-**Protocol**: JSON-RPC over HTTP  
-**Content-Type**: `application/json`
+**Temporal Queries:**
+```
+"Show sales from this month"
+"Count orders from last 30 days"
+"Find records created this year"
+```
+
+### Programmatic Usage
+
+```python
+import asyncio
+from cosmos_client import CosmosClient, Settings
+
+async def main():
+    # Configure client
+    cfg = Settings(
+        azure_endpoint="https://resource.openai.azure.com/",
+        azure_api_key="your-key",
+        mcp_url="http://localhost:8000/mcp"
+    )
+    
+    client = CosmosClient(cfg)
+    await client.connect()
+    
+    # Execute queries
+    queries = [
+        "How many documents are there?",
+        "Show me 5 sample records",
+        "List all distinct cities"
+    ]
+    
+    for query in queries:
+        response = await client.ainvoke(query)
+        print(f"\nQ: {query}")
+        print(f"A: {response['text']}")
+        print(f"Time: {response['elapsed_sec']}s")
+
+asyncio.run(main())
+```
 
 ## Available Tools
 
-Your MCP server provides these tools to any connected LLM:
+The MCP server exposes these tools:
 
-| Tool | Description | Example Usage |
-|------|-------------|---------------|
-| `query_cosmos` | Run SQL queries | "SELECT * FROM c WHERE c.type = 'customer'" |
-| `list_collections` | List all containers | "What containers do I have?" |
-| `describe_container` | Show container schema | "What fields are in the Users container?" |
-| `find_implied_links` | Find relationships | "What foreign keys might exist?" |
-| `get_sample_documents` | Preview data | "Show me 3 sample documents" |
-| `count_documents` | Count total documents | "How many records are there?" |
-| `get_partition_key_info` | Get partition key | "What's the partition key?" |
-| `get_indexing_policy` | View indexing policy | "Show me the indexing configuration" |
-| `list_distinct_values` | Get unique values | "What are all the product categories?" |
+| Tool | Description | Example |
+|------|-------------|---------|
+| `query_cosmos` | Execute SQL queries | `SELECT * FROM c WHERE c.City = 'Miami'` |
+| `count_documents` | Count with filters | `{"filters": {"Status": "Active"}}` |
+| `list_collections` | List all containers | N/A |
+| `describe_container` | Show schema | Optional: container name |
+| `get_sample_documents` | Preview data | `limit=5` |
+| `list_distinct_values` | Get unique values | `field_name="City"` |
+| `find_implied_links` | Find relationships | N/A |
+| `get_partition_key_info` | Get partition key | N/A |
+| `get_indexing_policy` | View indexing | N/A |
 
-## Environment Variables
+### Tool Response Format
 
-Create a `.env` file or set environment variables:
+All tools return JSON:
 
-```env
-COSMOS_URI=https://your-account.documents.azure.com:443/
-COSMOS_KEY=your-primary-key
-COSMOS_DATABASE=your-database
-COSMOS_CONTAINER=your-container
+```json
+{
+  "count": 10,
+  "results": [...],
+  "container": "container-name"
+}
 ```
 
-## Command Line Options
+## Deployment
+
+### Local Development
 
 ```bash
-python cosmos_server.py [OPTIONS]
+# Terminal 1: MCP Server
+python cosmos_mcp_server.py
 
-Options:
-  --uri TEXT                 Cosmos DB URI
-  --key TEXT                 Cosmos DB Key  
-  --db TEXT                  Database name
-  --container TEXT           Container name
-  --use-managed-identity     Use Azure Managed Identity
-  --version                  Show version
-  --help                     Show help message
+# Terminal 2: Streamlit UI
+streamlit run streamlit_app.py
 ```
 
-> **Note:** All options can be set via environment variables in your `.env` file instead of command line arguments.
+### Docker Deployment
 
-## Security Best Practices
+**Dockerfile:**
+```dockerfile
+FROM python:3.10-slim
 
-### 🔒 Production Environments
+WORKDIR /app
 
-**Azure Managed Identity (Recommended for production):**
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+# Start both server and Streamlit
+CMD ["sh", "-c", "python server.py & streamlit run streamlit_app.py --server.port 8501 --server.address 0.0.0.0"]
+```
+
+**Build and Run:**
+```bash
+docker build -t cosmos-mcp-assistant .
+docker run -p 8000:8000 -p 8501:8501 --env-file .env cosmos-mcp-assistant
+```
+
+### Cloud Deployment (Azure Container Instances)
 
 ```bash
-# Enable managed identity and skip access keys
-python cosmos_server.py --use-managed-identity
+# Build and push to Azure Container Registry
+az acr build --registry myregistry \
+  --image cosmos-mcp-assistant:latest .
+
+# Deploy to ACI
+az container create \
+  --resource-group mygroup \
+  --name cosmos-mcp \
+  --image myregistry.azurecr.io/cosmos-mcp-assistant:latest \
+  --ports 8000 8501 \
+  --environment-variables \
+    COSMOS_URI="https://..." \
+    COSMOS_KEY="..." \
+    AZURE_OPENAI_ENDPOINT="https://..." \
+    AZURE_OPENAI_API_KEY="..."
 ```
-
-**Network Security:**
-- Use `--host 127.0.0.1` for local-only access
-- Use `--host 0.0.0.0` only with proper firewall rules
-- Consider VPN or private networks for production
-
-### 🔧 Development Environments
-
-- Never commit `.env` files to version control
-- Add `.env` to `.gitignore`
-- Use read-only keys when possible
-- Consider Azure Cosmos DB Emulator for local development
 
 ## Troubleshooting
 
 ### Common Issues
 
-**1. Server won't start**
+**1. MCP Server won't start**
 ```bash
-# Check if port is already in use 
-netstat -an | grep 8080
+# Check if port is in use
+netstat -an | grep 8000
 
-# Configure different port in 
- cosmos_server.py 
+# Try different port
+python server.py --port 8001
 ```
 
-**2. Continue.dev can't connect**
-- Ensure server is running: `curl http://127.0.0.1:8080/mcp/`
-- Check Continue.dev logs for connection errors
-- Verify URL in Continue.dev config
+**2. Client can't connect to server**
+```bash
+# Verify server is running
+curl http://localhost:8000/mcp
 
-**3. Claude Desktop proxy issues**
-- Restart both the server and Claude Desktop
-- Check proxy.py file permissions
-- Verify paths in claude_desktop_config.json
+# Check MCP_URL in .env
+echo $MCP_URL
 
-**4. Connection refused**
-- Verify Azure Cosmos DB credentials
-- Check firewall settings
-- Ensure database and container exist
+# Test with verbose logging
+python client.py --verbose
+```
 
+**3. Streamlit connection issues**
+- Ensure MCP server is running first
+- Check sidebar connection status
+- Verify Azure OpenAI credentials
+- Check browser console for errors
 
-## Performance Tips
+**4. Azure OpenAI errors**
+```
+Error: 401 Unauthorized
+→ Check AZURE_OPENAI_API_KEY
 
-- Use partition keys in queries for better performance
-- Start with small queries on large containers
-- Limit sample document requests (default: 5, max: 100)
-- Use `COUNT` queries to check container sizes first
+Error: 404 Not Found
+→ Verify AZURE_OPENAI_DEPLOYMENT name
+
+Error: Rate limit exceeded
+→ Wait or upgrade your Azure OpenAI tier
+```
+
+**5. Agent not finding results**
+- Try relaxing filters (use LIKE instead of =)
+- Check schema with "Describe container"
+- View intermediate steps in Streamlit
+- Verify data exists with "Show sample documents"
+
+### Debug Mode
+
+**Enable verbose logging:**
+```python
+import logging
+logging.basicConfig(level=logging.DEBUG)
+```
+
+**Streamlit debug:**
+```bash
+streamlit run streamlit_app.py --logger.level=debug
+```
+
+**Agent intermediate steps:**
+Enable "Show Intermediate Steps" in Streamlit sidebar
+
+## Security Best Practices
+
+### 🔒 Production
+
+1. **Use Managed Identity:**
+```bash
+python server.py --use-managed-identity
+```
+
+2. **Network Security:**
+- Bind to localhost only: `--host 127.0.0.1`
+- Use VPN or private networks
+- Configure Azure Cosmos DB firewall rules
+
+3. **Secrets Management:**
+- Use Azure Key Vault
+- Never commit `.env` to git
+- Rotate keys regularly
+- Use read-only keys when possible
+
+4. **Authentication:**
+- Add authentication layer to Streamlit
+- Use Azure AD for SSO
+- Implement rate limiting
+
+### 🔧 Development
+
+- Add `.env` to `.gitignore`
+- Use Azure Cosmos DB Emulator for local testing
+- Create separate dev/prod environments
+- Use minimum required permissions
+
+## Performance Optimization
+
+### Query Optimization
+
+1. **Use partition keys:**
+```sql
+-- Good (uses partition key)
+SELECT * FROM c WHERE c.userId = '123'
+
+-- Avoid (cross-partition)
+SELECT * FROM c WHERE c.email = 'user@example.com'
+```
+
+2. **Limit results:**
+```sql
+-- Always use TOP
+SELECT TOP 100 * FROM c WHERE c.status = 'Active'
+```
+
+3. **Index usage:**
+- Check indexing policy with `get_indexing_policy`
+- Use indexed fields in WHERE clauses
+
+### Agent Optimization
+
+1. **Reduce iterations:**
+```python
+cfg = Settings(max_iterations=3)  # Faster, less thorough
+```
+
+2. **Disable intermediate steps:**
+```python
+# In Streamlit UI
+show_intermediate = False
+```
+
+3. **Cache schema:**
+```python
+# Schema is cached in session state
+# Use "Get Schema" quick action once
+```
 
 ## Contributing
 
-We welcome contributions! 
+We welcome contributions! 🎉
 
 ### Development Setup
 
 ```bash
-git clone https://github.com/AzureCosmosDB/azure-cosmos-mcp-server-samples.git
-cd azure-cosmos-mcp-server-samples/python
+# Fork and clone
+git clone https://github.com/yourusername/cosmos-mcp-assistant.git
+cd cosmos-mcp-assistant
 
-# Create feature branch
+# Create branch
 git checkout -b feature/your-feature
 
+# Install dev dependencies
+pip install -r requirements-dev.txt
+
 # Make changes and test
-python cosmos_server.py --transport streamable-http
+python -m pytest tests/
 
 # Submit PR
 git push origin feature/your-feature
 ```
 
-### Ideas for Contributions
+### Contribution Ideas
 
-- 🔄 Additional Azure Cosmos DB operations
-- 📊 Data visualization tools  
-- 🔐 Enhanced authentication options
-- 🚀 Performance optimizations
-- 📝 Better error messages
+- 🔄 Additional MCP tools (bulk operations, aggregations)
+- 📊 Data visualization in Streamlit (charts, graphs)
+- 🔐 Authentication layer (Azure AD, OAuth)
+- 🚀 Performance monitoring dashboard
 - 🌐 Multi-container support
+- 📝 Query templates library
+- 🎨 Custom Streamlit themes
+- 🧪 Comprehensive test suite
 
-## Architecture
+## Project Structure
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   LLM Clients   │────▶│  HTTP Transport  │────▶│  FastMCP Server │
-│ (Continue.dev,  │◀────│  (Port 8080)     │◀────│   (Python)      │
-│  Claude+Proxy)  │     └──────────────────┘     └────────┬────────┘
-└─────────────────┘                                       │
-                                                           ▼
-                                                  ┌─────────────────┐
-                                                  │  Azure Cosmos   │
-                                                  │     Database    │
-                                                  └─────────────────┘
+Streamable_HTTP/
+├── server.py      # MCP server (HTTP transport)
+├── client.py           # Intelligent ReAct client
+├── streamlit_app.py           # Web UI
+├── requirements.txt           # Python dependencies
+```
+
+## Requirements
+
+```txt
+# Azure SDK
+azure-cosmos>=4.5.0
+azure-identity>=1.15.0
+
+# FastMCP
+fastmcp>=0.2.0
+
+# LangChain
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langchain-mcp-adapters>=0.1.0
+langchainhub>=0.1.14
+
+# Streamlit
+streamlit>=1.30.0
+pandas>=2.0.0
+
+# Utilities
+python-dotenv>=1.0.0
 ```
 
 ## License
@@ -374,22 +727,51 @@ MIT License - see LICENSE file for details
 
 ## Acknowledgments
 
-- Thanks to Anthropic for the MCP protocol
-- Thanks to Azure Cosmos DB team for the Python SDK
-- Thanks to Continue.dev for native MCP support
-- Special thanks to contributors and early adopters
+- 🙏 Anthropic for the MCP protocol
+- 🙏 Azure Cosmos DB team for the Python SDK
+- 🙏 LangChain community for ReAct agent framework
+- 🙏 Streamlit for the beautiful UI framework
+- 🙏 All contributors and early adopters
+
+## Support
+
+- 📚 [Azure Cosmos DB Documentation](https://docs.microsoft.com/azure/cosmos-db/)
+- 📚 [MCP Protocol Specification](https://modelcontextprotocol.io/)
+- 📚 [LangChain Documentation](https://python.langchain.com/)
+- 📚 [Streamlit Documentation](https://docs.streamlit.io/)
+- 🐛 [Report Issues](https://github.com/yourusername/cosmos-mcp-assistant/issues)
+
+## FAQ
+
+**Q: Do I need all three components?**  
+A: No! Use just the MCP server for LLM integration, or add the client/UI as needed.
+
+**Q: Can I use other LLM providers?**  
+A: Yes! The client works with any OpenAI-compatible API. Modify `azure_endpoint` accordingly.
+
+**Q: Does this work with Azure Cosmos DB for MongoDB/Cassandra/Gremlin?**  
+A: Currently supports SQL API only. Other APIs coming soon!
+
+**Q: Can I deploy this in production?**  
+A: Yes! Use Managed Identity, proper network security, and consider adding authentication.
+
+**Q: How much does this cost?**  
+A: Costs include Azure Cosmos DB RU consumption + Azure OpenAI API calls. Start small!
 
 ---
 
 **🚀 Ready to explore your data?**
 
-1. Start server: `python cosmos_server.py`
-2. Configure your LLM client
-3. Ask: *"What containers do I have in my database?"*
-
-**Need Help?** 
-- 🌐 [Azure Cosmos DB Docs](https://docs.microsoft.com/azure/cosmos-db/)
-- 💬 [Continue.dev Docs](https://continue.dev/docs)
-- 🐛 [Open an issue](https://github.com/AzureCosmosDB/azure-cosmos-mcp-server-samples/issues)
+1. Configure `.env` file
+2. Start server: `python server.py`
+3. Start UI: `streamlit run streamlit_app.py`
+4. Open browser: `http://localhost:8501`
+5. Ask: *"What's in my database?"*
 
 **Happy querying! 🎉**
+
+---
+
+**Built with ❤️ for the Azure Cosmos DB community**
+
+**Contact**: Mohammed Aftab (https://github.com/Aftabbs)
