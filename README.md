@@ -14,12 +14,11 @@ This repo showcases how to build Model Context Protocol (MCP) servers using Azur
  - [Python MCP Server Sample for Azure Cosmos DB](/python)
 
 
-## 📦 Official Azure Cosmos DB MCP server 
+## 📦 Official Azure Cosmos DB MCP Toolkit
 
-The Azure MCP Server enables AI agents and other types of clients to interact with Azure resources through natural language commands. It implements the Model Context Protocol (MCP) to provide these key features of multipl Azure services including Azure Cosmos DB, Please visit the repository for the latest source code, documentation, and installation instructions:
+A Model Context Protocol (MCP) server that enables AI agents to interact with Azure Cosmos DB through natural language queries. Features enterprise-grade security with Azure Entra ID authentication, document operations, vector search, and schema discovery.
 
-👉 **[Azure MCP GitHub Repository](https://github.com/Azure/azure-mcp)**
-
+👉 [Azure Cosmos DB MCP Toolkit](https://github.com/AzureCosmosDB/MCPToolKit)
 
 ## Contributing
 
