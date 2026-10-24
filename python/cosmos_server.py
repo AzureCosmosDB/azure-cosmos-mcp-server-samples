@@ -124,13 +124,7 @@ def initialize_server() -> FastMCP:
     """Initialize the FastMCP server with Cosmos DB tools."""
     return FastMCP(
         "Azure Cosmos DB Explorer",
-        version=__version__,
-        capabilities={
-            "tools": True,
-            "logging": True,
-            "resources": False,
-            "prompts": False
-        }
+        version=__version__
     )
 
 
@@ -194,6 +188,26 @@ Example:
     return parser.parse_args()
 
 
+def _normalize_groupby_results(items: List[Any]) -> List[Any]:
+    """Flatten raw GroupBy wire format (groupByItems + payload) into plain dicts."""
+    if not items or not isinstance(items[0], dict) or 'groupByItems' not in items[0]:
+        return items
+    normalized = []
+    for doc in items:
+        row = {}
+        payload = doc.get('payload', {})
+        for k, v in payload.items():
+            row[k] = v.get('item', v) if isinstance(v, dict) else v
+        # Only use groupByItems if payload didn't cover the group fields
+        if not payload:
+            for gi in doc.get('groupByItems', []):
+                if isinstance(gi, dict):
+                    for k, v in gi.items():
+                        row[k] = v.get('item', v) if isinstance(v, dict) else v
+        normalized.append(row)
+    return normalized
+
+
 def format_query_results(items: List[Dict[str, Any]]) -> str:
     """
     Format query results for display.
@@ -210,19 +224,22 @@ def format_query_results(items: List[Dict[str, Any]]) -> str:
     result = ["Results:", "-" * 50]
     
     for i, doc in enumerate(items, 1):
-        result.append(f"\nDocument {i}:")
-        for key, value in doc.items():
-            if isinstance(value, (dict, list)):
-                value_str = json.dumps(value, indent=2)
-            else:
-                value_str = str(value)
-            result.append(f"  {key}: {value_str}")
+        if isinstance(doc, dict):
+            result.append(f"\nDocument {i}:")
+            for key, value in doc.items():
+                if isinstance(value, (dict, list)):
+                    value_str = json.dumps(value, indent=2)
+                else:
+                    value_str = str(value)
+                result.append(f"  {key}: {value_str}")
+        else:
+            result.append(f"\nResult {i}: {doc}")
     
     return "\n".join(result)
 
 
 @mcp.tool()
-def query_cosmos(query: str) -> str:
+def query_cosmos(query: str, container_name: Optional[str] = None) -> str:
     """
     Run an arbitrary SQL-like query on the active CosmosDB container and return formatted results.
     
@@ -231,16 +248,18 @@ def query_cosmos(query: str) -> str:
     
     Args:
         query: SQL-like query string
+        container_name: Name of container to query (optional, uses default if not provided)
         
     Returns:
         Formatted query results or error message
     """
     try:
-        container = cosmos_connection.get_container_client()
+        container = cosmos_connection.get_container_client(container_name)
         items = list(container.query_items(
             query=query,
             enable_cross_partition_query=True
         ))
+        items = _normalize_groupby_results(items)
         return format_query_results(items)
     except exceptions.CosmosHttpResponseError as e:
         return f"Cosmos DB error: {e.status_code} - {e.message}"
